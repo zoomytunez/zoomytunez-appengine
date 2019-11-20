@@ -1,0 +1,18 @@
+runtime: python27
+api_version: 1
+threadsafe: true
+
+handlers:
+
+- url: /
+  script: main.application
+
+- url: .*
+  static_dir: public
+
+libraries:
+- name: webapp2
+  version: latest
+
+includes:
+  - env.yaml
