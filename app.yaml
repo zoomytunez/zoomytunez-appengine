@@ -8,7 +8,7 @@ handlers:
   script: main.application
 
 - url: /auth/.*
-  script: routes.auth.route
+  script: routes.auth
 
 - url: .*
   static_dir: public
