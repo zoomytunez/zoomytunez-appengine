@@ -15,6 +15,7 @@ STRAVA_TOKEN_URL = "https://www.strava.com/oauth/token"
 SPOTIFY_SCOPE = "playlist-modify-private playlist-read-private"
 STRAVA_SCOPE = "read,activity:read_all"
 
+
 class SpotifyRequestHandler(webapp2.RequestHandler):
     def get(self):
         callback = self.request.host_url.replace("http:", "https:", 1) + SPOTIFY_CALLBACK_PATH
@@ -24,11 +25,12 @@ class SpotifyRequestHandler(webapp2.RequestHandler):
             "scope": SPOTIFY_SCOPE,
             "redirect_uri": callback
         }
-        if ('force' in self.request.GET):
+        if 'force' in self.request.GET:
             params["show_dialog"] = "true"
         url = SPOTIFY_OAUTH_URL + urllib.urlencode(params)
         self.response.status = 302
         self.response.headers.add('Location', url)
+
 
 class SpotifyCallbackHandler(webapp2.RequestHandler):
     def get(self):
@@ -61,6 +63,7 @@ class SpotifyCallbackHandler(webapp2.RequestHandler):
         self.response.write("<p>The following information was received:</p><pre>")
         self.response.write(cgi.escape(pretty(data)) + "</pre>")
         self.response.write('<script>history.replaceState({}, "", location.pathname)</script>')
+
 
 class StravaRequestHandler(webapp2.RequestHandler):
     def get(self):
