@@ -2,6 +2,9 @@ import webapp2, os
 
 class MainHandler(webapp2.RequestHandler):
     def get(self):
+        if self.request.scheme == "http" and not ~self.request.host.find("localhost"):
+            self.response.status = 301
+            self.response.headers.add('Location', self.request.url.replace("http:", "https:", 1))
         self.response.write("Hello, world!")
         self.response.write("<br>Secret variable: ")
         self.response.write(os.getenv("SECRET"))

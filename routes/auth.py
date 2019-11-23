@@ -17,7 +17,7 @@ STRAVA_SCOPE = "read,activity:read_all"
 
 class SpotifyRequestHandler(webapp2.RequestHandler):
     def get(self):
-        callback = self.request.host_url + SPOTIFY_CALLBACK_PATH
+        callback = self.request.host_url.replace("http:", "https:", 1) + SPOTIFY_CALLBACK_PATH
         params = {
             "response_type": "code",
             "client_id": getenv("SPOTIFY_ID"),
@@ -64,7 +64,7 @@ class SpotifyCallbackHandler(webapp2.RequestHandler):
 
 class StravaRequestHandler(webapp2.RequestHandler):
     def get(self):
-        callback = self.request.host_url + STRAVA_CALLBACK_PATH
+        callback = self.request.host_url.replace("http:", "https:", 1) + STRAVA_CALLBACK_PATH
         params = {
             "response_type": "code",
             "client_id": getenv("STRAVA_ID"),
