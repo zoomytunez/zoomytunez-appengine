@@ -3,7 +3,10 @@ import urllib2, logging, urllib
 def _noop():
     pass
 
-def safeGet(url, data=None, error=_noop):
+def safeGet(url, data=None, error=_noop, auth=None):
+    req = urllib2.Request(url)
+    if auth:
+        request.add_header("Authorization", auth)
     try:
         return urllib2.urlopen(url, urllib.urlencode(data))
     except urllib2.HTTPError as e:
