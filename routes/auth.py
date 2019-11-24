@@ -2,6 +2,8 @@ import webapp2, urllib, logging, urllib2, json, cgi
 from util import safeGet, pretty
 from os import getenv
 
+from api import spotify
+
 SPOTIFY_REQUEST_PATH = "/auth/login/spotify"
 SPOTIFY_CALLBACK_PATH = "/auth/spotify"
 STRAVA_REQUEST_PATH = "/auth/login/strava"
@@ -18,7 +20,7 @@ STRAVA_SCOPE = "read,activity:read_all"
 
 class SpotifyRequestHandler(webapp2.RequestHandler):
     def get(self):
-        callback = self.request.host_url.replace("http:", "https:", 1) + SPOTIFY_CALLBACK_PATH
+        callback = self.request.host_url + SPOTIFY_CALLBACK_PATH
         params = {
             "response_type": "code",
             "client_id": getenv("SPOTIFY_ID"),
@@ -34,7 +36,7 @@ class SpotifyRequestHandler(webapp2.RequestHandler):
 
 class SpotifyCallbackHandler(webapp2.RequestHandler):
     def get(self):
-        if ('error' in self.request.GET):
+        if 'error' in self.request.GET:
             self.response.status = 401
             self.response.write("<h1>Authorization unsuccessful</h1>")
             self.response.write("<p>An error occured: <code>")
@@ -58,6 +60,11 @@ class SpotifyCallbackHandler(webapp2.RequestHandler):
 
         data = json.load(resp)
 
+        accessToken = data["access_token"]
+        refreshToken = data["refresh_token"]
+
+        # userId = spotify.
+
         # self.response.headers.add("Content-Type", "application/json")
         self.response.write("<h1>Authorization successful</h1>")
         self.response.write("<p>The following information was received:</p><pre>")
@@ -67,14 +74,14 @@ class SpotifyCallbackHandler(webapp2.RequestHandler):
 
 class StravaRequestHandler(webapp2.RequestHandler):
     def get(self):
-        callback = self.request.host_url.replace("http:", "https:", 1) + STRAVA_CALLBACK_PATH
+        callback = self.request.host_url + STRAVA_CALLBACK_PATH
         params = {
             "response_type": "code",
             "client_id": getenv("STRAVA_ID"),
             "scope": STRAVA_SCOPE,
             "redirect_uri": callback
         }
-        if ('force' in self.request.GET):
+        if 'force' in self.request.GET:
             params['approval_prompt'] = "force"
         url = STRAVA_OAUTH_URL + urllib.urlencode(params)
         self.response.status = 302
@@ -83,7 +90,7 @@ class StravaRequestHandler(webapp2.RequestHandler):
 
 class StravaCallbackHandler(webapp2.RequestHandler):
     def get(self):
-        if ('error' in self.request.GET):
+        if 'error' in self.request.GET:
             self.response.status = 401
             self.response.write("<h1>Authorization unsuccessful</h1>")
             self.response.write("<p>An error occured: <code>")
@@ -92,7 +99,7 @@ class StravaCallbackHandler(webapp2.RequestHandler):
         code = self.request.GET['code']
         scope = self.request.GET['scope']
 
-        if (scope != STRAVA_SCOPE):
+        if scope != STRAVA_SCOPE:
             self.response.status = 401
             self.response.write("<h1>Authorization not granted</h1>")
             self.response.write("<p>Cannot read private activities. ")
