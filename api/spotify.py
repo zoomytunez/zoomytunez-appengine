@@ -17,4 +17,7 @@ def getNewAcessToken(refreshToken):
 def getUserInformation(accessToken, refreshToken):
     def errorHandler():
         pass
-    safeGet(URL + "me", auth= authToken,  error=errorHandler)
+    if something:
+        accessToken = getNewAcessToken(refreshToken)
+    res = safeGet(URL + "me", auth= accessToken,  error=errorHandler)
+    return res
