@@ -1,21 +1,24 @@
 import urllib2, logging, urllib
 
-def _noop():
+def _noop(*args):
     pass
 
 def safeGet(url, data=None, error=_noop, auth=None):
     req = urllib2.Request(url)
     if auth:
-        request.add_header("Authorization", auth)
+        req.add_header("Authorization", auth)
     try:
-        return urllib2.urlopen(url, urllib.urlencode(data))
+        if data:
+            return urllib2.urlopen(req, urllib.urlencode(data))
+        else:
+            return urllib2.urlopen(req)
     except urllib2.HTTPError as e:
         logging.error("The server couldn't fulfill the request.")
         logging.error("Error code: " + str(e.code))
-        error(e)
+        if error: error(e)
         return None
     except urllib2.URLError as e:
         logging.error("We failed to reach a server")
         logging.error("Reason: " + str(e.reason))
-        error(e)
+        if error: error(e)
         return None
