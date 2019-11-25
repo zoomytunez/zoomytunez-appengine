@@ -45,31 +45,35 @@ class SpotifyCallbackHandler(webapp2.RequestHandler):
         code = self.request.GET['code']
         callback = self.request.host_url + SPOTIFY_CALLBACK_PATH
 
-        def errorHandler():
+        self.response.write("<style>.error { color: red; }</style>")
+
+        def errorHandler(e):
             self.response.status = 500
-            self.response.write("An error occurred when getting the authorization token.")
+            self.response.write("""<p class="error">An error occurred when getting the authorization token.</p>""")
 
-        resp = safeGet(SPOTIFY_TOKEN_URL, {
-            "grant_type": "authorization_code",
-            "code": code,
-            "redirect_uri": callback,
-            "client_id": getenv("SPOTIFY_ID"),
-            "client_secret": getenv("SPOTIFY_SECRET")
-        }, error = errorHandler)
-        if not resp: return
+        data = spotify.getAccessToken(code, callback, error=errorHandler)
+        if not data: return
 
-        data = json.load(resp)
-
-        accessToken = data["access_token"]
-        refreshToken = data["refresh_token"]
-
-        # userId = spotify.
-
-        # self.response.headers.add("Content-Type", "application/json")
         self.response.write("<h1>Authorization successful</h1>")
         self.response.write("<p>The following information was received:</p><pre>")
         self.response.write(cgi.escape(pretty(data)) + "</pre>")
         self.response.write('<script>history.replaceState({}, "", location.pathname)</script>')
+
+        accessToken = data["access_token"]
+        refreshToken = data["refresh_token"]
+
+        def errorHandler(e):
+            self.response.status = 500
+            self.response.write("""<p class="error">An error occurred when getting the user info</p>""")
+
+        data = spotify.getUserInformation(accessToken, refreshToken, error=errorHandler)
+        if not data: return
+
+        self.response.write("<h1>Get user info successful</h1>")
+        self.response.write("<p>The following information was received:</p><pre>")
+        self.response.write(cgi.escape(pretty(data)) + "</pre>")
+
+        # self.response.headers.add("Content-Type", "application/json")
 
 
 class StravaRequestHandler(webapp2.RequestHandler):
@@ -107,7 +111,7 @@ class StravaCallbackHandler(webapp2.RequestHandler):
             self.response.write('<script>history.replaceState({}, "", location.pathname)</script>')
             return;
 
-        def errorHandler():
+        def errorHandler(e):
             self.response.status = 500
             self.response.write("An error occurred when getting the authorization token.")
 
