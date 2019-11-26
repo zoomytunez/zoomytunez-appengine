@@ -10,6 +10,9 @@ handlers:
 - url: /auth/.*
   script: routes.auth
 
+- url: /spotifytest/?
+  script: routes.spotifytest
+
 - url: .*
   static_dir: public
 

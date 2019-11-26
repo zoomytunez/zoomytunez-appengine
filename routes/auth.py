@@ -1,8 +1,9 @@
 import webapp2, urllib, logging, urllib2, json, cgi
-from util import safeGet, pretty
+from util import safeGet, pretty, cookie
 from os import getenv
 
 from api import spotify
+from model import User
 
 SPOTIFY_REQUEST_PATH = "/auth/login/spotify"
 SPOTIFY_CALLBACK_PATH = "/auth/spotify"
@@ -73,7 +74,22 @@ class SpotifyCallbackHandler(webapp2.RequestHandler):
         self.response.write("<p>The following information was received:</p><pre>")
         self.response.write(cgi.escape(pretty(data)) + "</pre>")
 
-        # self.response.headers.add("Content-Type", "application/json")
+        # save the user's data to datastore
+
+        spotifyID = data["id"]
+        userdata = User.getBySpotifyID(spotifyID).get()
+        if not userdata:
+            userdata = User(spotifyID = data["id"])
+
+        userdata.spotifyAccessToken = accessToken
+        userdata.spotifyRefreshToken = refreshToken
+
+        userdata.refreshSession()
+
+        key = userdata.put()
+
+        cookie.set(self.response, "session", userdata.sessionCookie)
+        cookie.set(self.response, "user", key.urlsafe())
 
 
 class StravaRequestHandler(webapp2.RequestHandler):
