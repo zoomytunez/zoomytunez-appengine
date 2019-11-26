@@ -43,7 +43,14 @@ class SpotifyCallbackHandler(webapp2.RequestHandler):
             self.response.write("<p>An error occured: <code>")
             self.response.write(cgi.escape(self.request.GET['error']) + "</code>.</p>")
             return
+
+        if "code" not in self.request.GET:
+            self.response.status = 302
+            self.response.headers.add('Location', SPOTIFY_REQUEST_PATH)
+            return
+
         code = self.request.GET['code']
+
         callback = self.request.host_url + SPOTIFY_CALLBACK_PATH
 
         self.response.write("<style>.error { color: red; }</style>")
@@ -71,6 +78,8 @@ class SpotifyCallbackHandler(webapp2.RequestHandler):
         if not data: return
 
         self.response.write("<h1>Get user info successful</h1>")
+        self.response.write('<a href="/spotifytest">Test persistent login</a>')
+        self.response.write('<br><a href="/">Back to home</a>')
         self.response.write("<p>The following information was received:</p><pre>")
         self.response.write(cgi.escape(pretty(data)) + "</pre>")
 
@@ -147,10 +156,21 @@ class StravaCallbackHandler(webapp2.RequestHandler):
         self.response.write(cgi.escape(pretty(data)) + "</pre>")
         self.response.write('<script>history.replaceState({}, "", location.pathname)</script>')
 
+class LogoutHandler(webapp2.RequestHandler):
+    def get(self):
+        user = User.getForSession(self.request)
+        if user:
+            user.clearSession()
+        cookie.clear(self.response, "session")
+        cookie.clear(self.response, "user")
+        self.response.status = 302
+        self.response.headers.add('Location', '/')
+
 
 route = webapp2.WSGIApplication([
     (SPOTIFY_REQUEST_PATH + "/?", SpotifyRequestHandler),
     (SPOTIFY_CALLBACK_PATH + "/?", SpotifyCallbackHandler),
     (STRAVA_REQUEST_PATH + "/?", StravaRequestHandler),
     (STRAVA_CALLBACK_PATH + "/?", StravaCallbackHandler),
+    ("/logout", LogoutHandler)
 ], debug=True)

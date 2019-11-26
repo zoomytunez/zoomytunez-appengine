@@ -1,6 +1,9 @@
 from google.appengine.ext import ndb
 
+from util import cookie
 import binascii, os
+
+import logging
 
 class User(ndb.Model):
     spotifyID = ndb.StringProperty(required=True)
@@ -14,11 +17,24 @@ class User(ndb.Model):
     def refreshSession(self):
         self.sessionCookie = binascii.hexlify(os.urandom(20)).decode()
 
+    def clearSession(self):
+        self.sessionCookie = None
+
     @classmethod
     def getBySpotifyID(cls, spotifyID):
         return User.query(User.spotifyID == spotifyID)
 
     @classmethod
-    def getByKeyString(cls, keyString):
-        key = ndb.Key(urlsafe=keyString)
-        return key.get()
+    def getForSession(cls, req):
+        userCookie = cookie.parse(req.cookies.get("user"))
+        sessionCookie = cookie.parse(req.cookies.get("session"))
+        if not userCookie or not sessionCookie:
+            return None
+        try:
+            key = ndb.Key(urlsafe=userCookie)
+            user = key.get()
+            if user.sessionCookie and user.sessionCookie == sessionCookie:
+                return user
+            return None
+        except:
+            return None

@@ -1,23 +1,24 @@
-import webapp2
+import webapp2, cgi
 from util import cookie, pretty
 from model import User
 from api import spotify
 
+import logging
+
 class SpotifyTestHandler(webapp2.RequestHandler):
     def get(self):
-
-        sessionid = cookie.parse(self.request.cookies.get("session"))
-        userKeyString = cookie.parse(self.request.cookies.get("user"))
-
-        try:
-            if not sessionid or not userKeyString:
-                raise Error()
-            user = User.getByKeyString(userKeyString)
-            data = spotify.getUserInformation(user.spotifyAccessToken, user.spotifyRefreshToken)
-            self.response.write(pretty(data))
-        except:
-            self.response.write("Not logged in.")
+        user = User.getForSession(self.request)
+        if not user:
+            self.response.write("<h1>Not logged in or session expired</h1>")
+            self.response.write('<a href="/auth/login/spotify">login</a>')
+            return
+        self.response.write("<h1>Your information:</h1>")
+        data = spotify.getUserInformation(user.spotifyAccessToken, user.spotifyRefreshToken)
+        self.response.write("<pre>")
+        self.response.write(cgi.escape(pretty(data)))
+        self.response.write('</pre>')
+        self.response.write('<a href="/">home</a> <a href="/logout">logout</a> ')
 
 route = webapp2.WSGIApplication([
-    ("/spotifytest/?", SpotifyTestHandler)
+    ("/spotifytest", SpotifyTestHandler)
 ])

@@ -10,7 +10,10 @@ handlers:
 - url: /auth/.*
   script: routes.auth
 
-- url: /spotifytest/?
+- url: /logout
+  script: routes.auth
+
+- url: /spotifytest
   script: routes.spotifytest
 
 - url: .*

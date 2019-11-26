@@ -1,4 +1,4 @@
-import base64, Cookie
+import base64, Cookie, email
 
 def set(response, name, value, domain=None, path="/", expires=None):
     value = base64.b64encode(value)
@@ -11,6 +11,12 @@ def set(response, name, value, domain=None, path="/", expires=None):
             expires, localtime=False, usegmt=True)
     response.headers.add("Set-Cookie", cookie.output()[12:])
 
+def clear(response, name, path="/"):
+    cookie = Cookie.BaseCookie()
+    cookie[name] = ""
+    cookie[name]["path"] = path
+    cookie[name]["expires"] = "Thu, 01 Jan 1970 00:00:00 GMT"
+    response.headers.add("Set-Cookie", cookie.output()[12:])
 
 def parse(value):
     if not value: return None
