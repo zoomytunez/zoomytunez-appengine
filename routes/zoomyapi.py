@@ -22,21 +22,18 @@ class SpotifySearch(webapp2.RequestHandler):
         self.response.headers.add("Content-Type", "application/json")
         self.response.write(searchResults)
 
-route = webapp2.WSGIApplication([
-    ("/api/search", SpotifySearch),
-    ("/api/list-genres", SpotifyGenres)
-])
-
 class SpotifyGenres(webapp2.RequestHandler):
     def get(self):
-        params = self.request.GET
-        if "q" not in params:
-            self.response.status = 400
-            return
         spotifyAPI = User.getSpotifyForSession(self.request)
         if not spotifyAPI:
             self.response.status = 401
             return
-        searchResults = spotifyAPI.getGenres()
+        searchResults = spotifyAPI.getGenres(parse=False)
         self.response.headers.add("Content-Type", "application/json")
         self.response.write(searchResults)
+
+
+route = webapp2.WSGIApplication([
+    ("/api/search", SpotifySearch),
+    ("/api/list-genres", SpotifyGenres)
+])

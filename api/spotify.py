@@ -52,9 +52,8 @@ class SpotifyAPI():
 
     def getGenres(self, parse=True):
         error = refreshAndRetry(self, lambda: self.getGenres())
-        res = safeGet(URL + "recommendations", auth = ("Bearer %s" % self.accessToken), error = error)
+        res = safeGet(URL + "recommendations/available-genre-seeds", auth = ("Bearer %s" % self.accessToken), error = error)
         if not res: return None
-        data = json.load(res)
         if parse:
             return json.load(res)
         else:
