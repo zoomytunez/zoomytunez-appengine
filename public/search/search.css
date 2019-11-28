@@ -1,0 +1,70 @@
+body {
+  background-color: #ddd;
+  font-family: "Lato";
+}
+
+.search-container {
+  background-color: white;
+  width: 400px;
+  margin: 4rem auto;
+  padding: 1rem;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.2),
+              0 4px 16px -8px rgba(0, 0, 0, 0.15);
+  border-radius: 8px;
+}
+
+.search-box {
+  width: 100%;
+  font-family: inherit;
+  font-size: 1rem;
+  border: 0;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.6);
+  padding: 8px;
+  border-radius: 4px 4px 0 0;
+}
+
+.search-box:focus {
+  background-color: rgba(0, 0, 0, 0.08);
+  outline: none;
+}
+
+.result-tile {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.4);
+  /* padding: 4px 0; */
+}
+
+.result-tile-image {
+  margin-right: 0.5rem;
+}
+
+.result-tile-image, .result-tile-image img {
+  width: 3rem;
+  height: 3rem;
+}
+
+.result-tile-body {
+  max-width: calc(100% - 4rem);
+}
+
+.result-tile-body h2, .result-tile-body p {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.5;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  height: 1.5rem;
+  width: 100%;
+}
+
+.result-tile-body h2 {
+  color: rgba(0, 0, 0, 0.9);
+}
+
+.result-tile-body p {
+  color:  rgba(0, 0, 0, 0.8);
+}
