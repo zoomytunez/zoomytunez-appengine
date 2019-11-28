@@ -28,7 +28,7 @@ class SpotifyAPI():
         return data
 
     def getPlaylists(self):
-        error = refreshAndRetry(self, lambda: self.getTopArtists())
+        error = refreshAndRetry(self, lambda: self.getPlaylists())
         res = safeGet(URL + "me/playlists", auth = ("Bearer %s" % self.accessToken), error = error)
         if not res: return None
         data = json.load(res)
@@ -45,6 +45,16 @@ class SpotifyAPI():
         error = refreshAndRetry(self, lambda: self.search())
         res = safeGet(URL + "search?" + urllib.urlencode(params), auth = ("Bearer %s" % self.accessToken), error = error)
         if not res: return None
+        if parse:
+            return json.load(res)
+        else:
+            return res.read()
+
+    def getGenres(self, parse=True):
+        error = refreshAndRetry(self, lambda: self.getGenres())
+        res = safeGet(URL + "recommendations", auth = ("Bearer %s" % self.accessToken), error = error)
+        if not res: return None
+        data = json.load(res)
         if parse:
             return json.load(res)
         else:
