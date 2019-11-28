@@ -2,7 +2,7 @@ import webapp2, urllib, logging, urllib2, json, cgi
 from util import safeGet, pretty, cookie
 from os import getenv
 
-from api import spotify
+from api import SpotifyAPI
 from model import User
 
 SPOTIFY_REQUEST_PATH = "/auth/login/spotify"
@@ -59,26 +59,23 @@ class SpotifyCallbackHandler(webapp2.RequestHandler):
             self.response.status = 500
             self.response.write("""<p class="error">An error occurred when getting the authorization token.</p>""")
 
-        data = spotify.getAccessToken(code, callback, error=errorHandler)
-        if not data: return
+        spotifyAPI = SpotifyAPI.getFromCode(code, callback, error=errorHandler)
+        if not spotifyAPI: return
 
         self.response.write("<h1>Authorization successful</h1>")
-        self.response.write("<p>The following information was received:</p><pre>")
-        self.response.write(cgi.escape(pretty(data)) + "</pre>")
-        self.response.write('<script>history.replaceState({}, "", location.pathname)</script>')
-
-        accessToken = data["access_token"]
-        refreshToken = data["refresh_token"]
+        # self.response.write("<p>The following information was received:</p><pre>")
+        # self.response.write(cgi.escape(pretty(data)) + "</pre>")
+        # self.response.write('<script>history.replaceState({}, "", location.pathname)</script>')
 
         def errorHandler(e):
             self.response.status = 500
             self.response.write("""<p class="error">An error occurred when getting the user info</p>""")
 
-        data = spotify.getUserInformation(accessToken, refreshToken, error=errorHandler)
+        data = spotifyAPI.getUserInformation()
         if not data: return
 
         self.response.write("<h1>Get user info successful</h1>")
-        self.response.write('<a href="/spotifytest">Test persistent login</a>')
+        self.response.write('<a href="/spotifytest/info">Test persistent login</a>')
         self.response.write('<br><a href="/">Back to home</a>')
         self.response.write("<p>The following information was received:</p><pre>")
         self.response.write(cgi.escape(pretty(data)) + "</pre>")
@@ -90,15 +87,16 @@ class SpotifyCallbackHandler(webapp2.RequestHandler):
         if not userdata:
             userdata = User(spotifyID = data["id"])
 
-        userdata.spotifyAccessToken = accessToken
-        userdata.spotifyRefreshToken = refreshToken
+        userdata.spotifyAccessToken = spotifyAPI.accessToken
+        userdata.spotifyRefreshToken = spotifyAPI.refreshToken
 
         userdata.refreshSession()
-
         key = userdata.put()
 
         cookie.set(self.response, "session", userdata.sessionCookie)
         cookie.set(self.response, "user", key.urlsafe())
+
+
 
 
 class StravaRequestHandler(webapp2.RequestHandler):

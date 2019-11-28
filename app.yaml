@@ -10,14 +10,18 @@ handlers:
 - url: /auth/.*
   script: routes.auth
 
+- url: /api/.*
+  script: routes.zoomyapi
+
 - url: /logout
   script: routes.auth
 
-- url: /spotifytest
+- url: /spotifytest/.*
   script: routes.spotifytest
 
-- url: .*
-  static_dir: public
+- url: /(.*)$
+  static_files: public/\1
+  upload: public/.*$
 
 libraries:
 - name: webapp2

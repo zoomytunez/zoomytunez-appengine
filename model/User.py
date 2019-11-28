@@ -2,6 +2,7 @@ from google.appengine.ext import ndb
 
 from util import cookie
 import binascii, os
+from api import SpotifyAPI
 
 import logging
 
@@ -19,6 +20,9 @@ class User(ndb.Model):
 
     def clearSession(self):
         self.sessionCookie = None
+
+    def getSpotifyAPI(self):
+        return SpotifyAPI(self.spotifyAccessToken, self.spotifyRefreshToken, self)
 
     @classmethod
     def getBySpotifyID(cls, spotifyID):
@@ -38,3 +42,8 @@ class User(ndb.Model):
             return None
         except:
             return None
+
+    @classmethod
+    def getSpotifyForSession(cls, req):
+        user = User.getForSession(req)
+        return (user.getSpotifyAPI() if user else None)

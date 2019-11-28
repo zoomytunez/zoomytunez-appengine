@@ -11,7 +11,8 @@ class MainHandler(webapp2.RequestHandler):
         self.response.write('<a href="/auth/login/spotify?force=true">(force dialog)</a>')
         self.response.write('<br><a href="/auth/login/strava">login with strava</a> ')
         self.response.write('<a href="/auth/login/strava?force=true">(force dialog)</a>')
-        self.response.write('<br><br><a href="/spotifytest">test spotify access</a>')
+        self.response.write('<br><br>test spotify access: <a href="/spotifytest/info">user info</a> ')
+        self.response.write('<a href="/spotifytest/playlists">private playlists</a>')
         if User.getForSession(self.request):
             self.response.write('<br>Logged in. <a href="/logout">logout</a>')
         else:

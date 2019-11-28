@@ -15,10 +15,10 @@ def safeGet(url, data=None, error=_noop, auth=None):
     except urllib2.HTTPError as e:
         logging.error("The server couldn't fulfill the request.")
         logging.error("Error code: " + str(e.code))
-        if error: error(e)
+        if error: return error(e)
         return None
     except urllib2.URLError as e:
         logging.error("We failed to reach a server")
         logging.error("Reason: " + str(e.reason))
-        if error: error(e)
+        if error: return error(e)
         return None
