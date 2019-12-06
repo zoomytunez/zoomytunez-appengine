@@ -34,6 +34,34 @@ class SpotifyAPI():
         data = json.load(res)
         return data
 
+    #jordan pls check over this
+    def getRecommendations(self, artists, tracks, genres):
+        params = {
+            "seed_artists": artists,
+            "seed_tracks": tracks,
+            "seed_genres": genres,
+        }
+        error = refreshAndRetry(self, lambda: self.search())
+        res = safeGet(URL + "recommendations?" + urllib.urlencode(params), auth = ("Bearer %s" % self.accessToken), error = error)
+        if not res: return None
+        data = json.load(res)
+        return data
+
+    def getPlaylistTracks(self, playlistID):
+        error = refreshAndRetry(self, lambda: self.getPlaylists())
+        res = safeGet(URL + "me/playlists/" + playlistID + "/tracks", auth = ("Bearer %s" % self.accessToken), error = error)
+        if not res: return None
+        data = json.load(res)
+        return data
+
+    #trackIDS should be a list of ids
+    def getAudioFeatures(self, trackIDS):
+        error = refreshAndRetry(self, lambda: self.getPlaylists())
+        res = safeGet(URL + "audio-features/?" + urllib.urlencode(trackIDS), auth = ("Bearer %s" % self.accessToken), error = error)
+        if not res: return None
+        data = json.load(res)
+        return data
+
     def search(self, query, limit=20, offset=0, parse=True):
         searchType = "artist,track"
         params = {
