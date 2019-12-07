@@ -12,7 +12,7 @@ def safeGet(url, data=None, error=_noop, auth=None, bearer=None, json=False):
     try:
         if data:
             if json:
-                req.add_header("Content-Type": "application/json")
+                req.add_header("Content-Type", "application/json")
                 return urllib2.urlopen(req, json.dumps(data))
             else:
                 return urllib2.urlopen(req, urllib.urlencode(data))
