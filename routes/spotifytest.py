@@ -47,7 +47,21 @@ class SpotifyPlaylists(webapp2.RequestHandler):
         self.response.write('</pre>')
         self.response.write('<a href="/">home</a> <a href="/logout">logout</a> ')
 
+class SpotifyAccess(webapp2.RequestHandler):
+    def get(self):
+        user = User.getForSession(self.request)
+
+        if not user:
+            self.response.write("<h1>Not logged in or session expired</h1>")
+            self.response.write('<a href="/auth/login/spotify">login</a>')
+            return
+
+        self.response.write("<pre>Access token: " + user.spotifyAccessToken)
+        self.response.write("<br>Refresh token: " + user.spotifyRefreshToken + "</pre>")
+
+
 route = webapp2.WSGIApplication([
     ("/spotifytest/info", SpotifyInfo),
-    ("/spotifytest/playlists", SpotifyPlaylists)
+    ("/spotifytest/playlists", SpotifyPlaylists),
+    ("/spotifytest/access", SpotifyAccess)
 ])
