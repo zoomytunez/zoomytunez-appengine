@@ -63,9 +63,18 @@ class SpotifyAPI():
             return res.read()
 
     #trackIDS should be a list of ids
-    def getAudioFeatures(self, trackIDS, parse=True):
+    def getAudioFeatures(self, trackIDs, parse=True):
         error = refreshAndRetry(self, lambda: self.getAudioFeatures())
-        res = safeGet(URL + "audio-features/?" + urllib.urlencode(trackIDS), bearer = self.accessToken, error = error)
+        res = safeGet(URL + "audio-features/?" + urllib.urlencode(trackIDs), bearer = self.accessToken, error = error)
+        if not res: return None
+        if parse:
+            return json.load(res)
+        else:
+            return res.read()
+
+    def getAudioAnalysis(self):
+        error = refreshAndRetry(self, lambda: self.getAudioAnalysis())
+        res = safeGet(URL + "audio-analysis/" + trackID, bearer = self.accessToken, error = error)
         if not res: return None
         if parse:
             return json.load(res)
