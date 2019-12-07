@@ -75,7 +75,7 @@ class SpotifyAPI():
     def createPlaylist(self, username, playlistName, parse=True):
         error = refreshAndRetry(self, lambda: self.createPlaylist())
         playlistData = {"name": playlistName, "public": False, "description": "A running playlist made just for you by ZoomyTunez"}
-        res = safeGet(URL + "users/" + username + "playlists", bearer = self.accessToken, data=playlistData, error = error, json=True)
+        res = safeGet(URL + "users/" + username + "/playlists", bearer = self.accessToken, data=playlistData, error = error, json=True)
         if not res: return None
         if parse:
             return json.load(res)
@@ -110,7 +110,7 @@ class SpotifyAPI():
     def addTracks(self, uris, playlistID, parse=True):
         error = refreshAndRetry(self, lambda: self.addTracks())
         res = safeGet(URL + "playlists/" + playlistID + "/tracks",
-                      data=uris,
+                      data=uris, json=True,
                       bearer=self.accessToken, error=error)
         if not res: return None
         if parse:
