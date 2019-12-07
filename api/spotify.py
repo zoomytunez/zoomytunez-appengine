@@ -20,52 +20,61 @@ class SpotifyAPI():
         self.refreshToken = refreshToken
         self.dbUser = dbUser
 
-    def getUserInformation(self):
+    def getUserInformation(self, parse=True):
         error = refreshAndRetry(self, lambda: self.getUserInformation())
-        res = safeGet(URL + "me", auth = ("Bearer %s" % self.accessToken), error = error)
+        res = safeGet(URL + "me", bearer = self.accessToken, error = error)
         if not res: return None
-        data = json.load(res)
-        return data
+        if parse:
+            return json.load(res)
+        else:
+            return res.read()
 
-    def getPlaylists(self):
+    def getPlaylists(self, parse=True):
         error = refreshAndRetry(self, lambda: self.getPlaylists())
-        res = safeGet(URL + "me/playlists", auth = ("Bearer %s" % self.accessToken), error = error)
+        res = safeGet(URL + "me/playlists", bearer = self.accessToken, error = error)
         if not res: return None
-        data = json.load(res)
-        return data
+        if parse:
+            return json.load(res)
+        else:
+            return res.read()
 
     #jordan pls check over this
-    def getRecommendations(self, artists, tracks, genres):
+    def getRecommendations(self, artists, tracks, genres, parse=True):
         params = {
             "seed_artists": artists,
             "seed_tracks": tracks,
             "seed_genres": genres,
         }
         error = refreshAndRetry(self, lambda: self.getRecommendations())
-        res = safeGet(URL + "recommendations?" + urllib.urlencode(params), auth = ("Bearer %s" % self.accessToken), error = error)
+        res = safeGet(URL + "recommendations?" + urllib.urlencode(params), bearer = self.accessToken, error = error)
         if not res: return None
-        data = json.load(res)
-        return data
+        if parse:
+            return json.load(res)
+        else:
+            return res.read()
 
-    def getPlaylistTracks(self, playlistID):
+    def getPlaylistTracks(self, playlistID, parse=True):
         error = refreshAndRetry(self, lambda: self.getPlaylistTracks(playlistID))
-        res = safeGet(URL + "me/playlists/" + playlistID + "/tracks", auth = ("Bearer %s" % self.accessToken), error = error)
+        res = safeGet(URL + "me/playlists/" + playlistID + "/tracks", bearer = self.accessToken, error = error)
         if not res: return None
-        data = json.load(res)
-        return data
-
+        if parse:
+            return json.load(res)
+        else:
+            return res.read()
     #trackIDS should be a list of ids
-    def getAudioFeatures(self, trackIDS):
+    def getAudioFeatures(self, trackIDS, parse=True):
         error = refreshAndRetry(self, lambda: self.getAudioFeatures())
-        res = safeGet(URL + "audio-features/?" + urllib.urlencode(trackIDS), auth = ("Bearer %s" % self.accessToken), error = error)
+        res = safeGet(URL + "audio-features/?" + urllib.urlencode(trackIDS), bearer = self.accessToken, error = error)
         if not res: return None
-        data = json.load(res)
-        return data
+        if parse:
+            return json.load(res)
+        else:
+            return res.read()
 
     def createPlaylist(self, username, playlistName, parse=True):
         error = refreshAndRetry(self, lambda: self.createPlaylist())
         playlistData = {"name": playlistName, "public": False, "description": "A running playlist made just for you by ZoomyTunez"}
-        res = safeGet(URL + "users/" + username + "playlists", auth = ("Bearer %s" % self.accessToken), data=playlistData, error = error)
+        res = safeGet(URL + "users/" + username + "playlists", bearer = self.accessToken, data=playlistData, error = error, json=True)
         if not res: return None
         if parse:
             return json.load(res)
@@ -81,7 +90,7 @@ class SpotifyAPI():
             "offset": offset
         }
         error = refreshAndRetry(self, lambda: self.search())
-        res = safeGet(URL + "search?" + urllib.urlencode(params), auth = ("Bearer %s" % self.accessToken), error = error)
+        res = safeGet(URL + "search?" + urllib.urlencode(params), bearer = self.accessToken, error = error)
         if not res: return None
         if parse:
             return json.load(res)
@@ -90,14 +99,14 @@ class SpotifyAPI():
 
     def getGenres(self, parse=True):
         error = refreshAndRetry(self, lambda: self.getGenres())
-        res = safeGet(URL + "recommendations/available-genre-seeds", auth = ("Bearer %s" % self.accessToken), error = error)
+        res = safeGet(URL + "recommendations/available-genre-seeds", bearer = self.accessToken, error = error)
         if not res: return None
         if parse:
             return json.load(res)
         else:
             return res.read()
 
-    def addTracks(self, uris, parse, playlistID):
+    def addTracks(self, uris, playlistID, parse=True):
         error = refreshAndRetry(self, lambda: self.addTracks())
         res = safeGet(URL + "playlists/" + playlistID + "/tracks",
                       data=uris,
