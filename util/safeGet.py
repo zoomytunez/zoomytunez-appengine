@@ -1,4 +1,5 @@
-import urllib2, logging, urllib, json
+import urllib2, logging, urllib
+import json as jsonModule
 
 def _noop(*args):
     pass
@@ -13,7 +14,7 @@ def safeGet(url, data=None, error=_noop, auth=None, bearer=None, json=False):
         if data:
             if json:
                 req.add_header("Content-Type", "application/json")
-                return urllib2.urlopen(req, json.dumps(data))
+                return urllib2.urlopen(req, jsonModule.dumps(data))
             else:
                 return urllib2.urlopen(req, urllib.urlencode(data))
         else:
