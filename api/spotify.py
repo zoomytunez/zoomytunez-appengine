@@ -87,6 +87,17 @@ class SpotifyAPI():
         else:
             return res.read()
 
+    def addTracks(self, uris, parse, playlistID):
+        error = refreshAndRetry(self, lambda: self.addTracks())
+        res = safeGet(URL + "playlists/" + playlistID + "/tracks",
+                      data=uris,
+                      bearer=self.accessToken, error=error)
+        if not res: return None
+        if parse:
+            return json.load(res)
+        else:
+            return res.read()
+
     def refreshAccessToken(self, error=None):
         """Gets a new refresh token for this user; returns true if successful"""
         b64string = base64.b64encode("%s:%s" % (getenv('SPOTIFY_ID'), getenv('SPOTIFY_SECRET')))
