@@ -1,4 +1,4 @@
-import urllib2, logging, urllib,
+import urllib2, logging, urllib
 import json as jsonModule
 
 def _noop(*args):
