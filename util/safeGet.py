@@ -1,15 +1,21 @@
-import urllib2, logging, urllib
+import urllib2, logging, urllib, json
 
 def _noop(*args):
     pass
 
-def safeGet(url, data=None, error=_noop, auth=None):
+def safeGet(url, data=None, error=_noop, auth=None, bearer=None, json=False):
     req = urllib2.Request(url)
+    if bearer:
+        auth = "Bearer " + bearer
     if auth:
         req.add_header("Authorization", auth)
     try:
         if data:
-            return urllib2.urlopen(req, urllib.urlencode(data))
+            if json:
+                req.add_header("Content-Type": "application/json")
+                return urllib2.urlopen(req, json.dumps(data))
+            else:
+                return urllib2.urlopen(req, urllib.urlencode(data))
         else:
             return urllib2.urlopen(req)
     except urllib2.HTTPError as e:
