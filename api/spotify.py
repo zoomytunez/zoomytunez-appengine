@@ -72,7 +72,7 @@ class SpotifyAPI():
         else:
             return res.read()
 
-    def getAudioAnalysis(self):
+    def getAudioAnalysis(self, trackID):
         error = refreshAndRetry(self, lambda: self.getAudioAnalysis())
         res = safeGet(URL + "audio-analysis/" + trackID, bearer = self.accessToken, error = error)
         if not res: return None
