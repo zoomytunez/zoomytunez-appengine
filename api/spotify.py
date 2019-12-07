@@ -55,7 +55,7 @@ class SpotifyAPI():
 
     def getPlaylistTracks(self, playlistID, parse=True):
         error = refreshAndRetry(self, lambda: self.getPlaylistTracks(playlistID))
-        res = safeGet(URL + "me/playlists/" + playlistID + "/tracks", bearer = self.accessToken, error = error)
+        res = safeGet(URL + "playlists/" + playlistID + "/tracks", bearer = self.accessToken, error = error)
         if not res: return None
         if parse:
             return json.load(res)
