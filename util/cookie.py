@@ -1,15 +1,21 @@
 import base64, Cookie, email
 
-def set(response, name, value, domain=None, path="/", expires=None):
+def set(response, name, value, domain=None, path="/", expires=None, secure=True):
     value = base64.b64encode(value)
     cookie = Cookie.BaseCookie()
     cookie[name] = value
     cookie[name]["path"] = path
+    # cookie[name]["httponly"] = True
+    if secure:
+        cookie[name]["Secure"] = True
     if domain: cookie[name]["domain"] = domain
     if expires:
         cookie[name]["expires"] = email.utils.formatdate(
             expires, localtime=False, usegmt=True)
-    response.headers.add("Set-Cookie", cookie.output()[12:])
+    cookieOutput = cookie.output()[12:]
+    if secure:
+        cookieOutput = cookieOutput + "; SameSite=None"
+    response.headers.add("Set-Cookie", cookieOutput)
 
 def clear(response, name, path="/"):
     cookie = Cookie.BaseCookie()

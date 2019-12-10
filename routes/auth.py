@@ -26,7 +26,8 @@ class SpotifyRequestHandler(webapp2.RequestHandler):
             "response_type": "code",
             "client_id": getenv("SPOTIFY_ID"),
             "scope": SPOTIFY_SCOPE,
-            "redirect_uri": callback
+            "redirect_uri": callback,
+            "state": (self.request.GET['from'] if ("from" in self.request.GET) else "/")
         }
         if 'force' in self.request.GET:
             params["show_dialog"] = "true"
@@ -51,9 +52,11 @@ class SpotifyCallbackHandler(webapp2.RequestHandler):
 
         code = self.request.GET['code']
 
+        returnURL = self.request.GET['state']
+
         callback = self.request.host_url + SPOTIFY_CALLBACK_PATH
 
-        self.response.write("<style>.error { color: red; }</style>")
+        # self.response.write("<style>.error { color: red; }</style>")
 
         def errorHandler(e):
             self.response.status = 500
@@ -62,7 +65,7 @@ class SpotifyCallbackHandler(webapp2.RequestHandler):
         spotifyAPI = SpotifyAPI.getFromCode(code, callback, error=errorHandler)
         if not spotifyAPI: return
 
-        self.response.write("<h1>Authorization successful</h1>")
+        # self.response.write("<h1>Authorization successful</h1>")
         # self.response.write("<p>The following information was received:</p><pre>")
         # self.response.write(cgi.escape(pretty(data)) + "</pre>")
         # self.response.write('<script>history.replaceState({}, "", location.pathname)</script>')
@@ -73,12 +76,6 @@ class SpotifyCallbackHandler(webapp2.RequestHandler):
 
         data = spotifyAPI.getUserInformation()
         if not data: return
-
-        self.response.write("<h1>Get user info successful</h1>")
-        self.response.write('<a href="/spotifytest/info">Test persistent login</a>')
-        self.response.write('<br><a href="/">Back to home</a>')
-        self.response.write("<p>The following information was received:</p><pre>")
-        self.response.write(cgi.escape(pretty(data)) + "</pre>")
 
         # save the user's data to datastore
 
@@ -93,8 +90,13 @@ class SpotifyCallbackHandler(webapp2.RequestHandler):
         userdata.refreshSession()
         key = userdata.put()
 
-        cookie.set(self.response, "session", userdata.sessionCookie)
-        cookie.set(self.response, "user", key.urlsafe())
+        secure = self.request.host_url[4] == "s"
+        logging.info(secure)
+
+        cookie.set(self.response, "session", userdata.sessionCookie, secure=secure)
+        cookie.set(self.response, "user", key.urlsafe(), secure=secure)
+        self.response.status = 302
+        self.response.headers.add('Location', str(returnURL))
 
 
 

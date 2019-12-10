@@ -36,7 +36,9 @@ def _originTest(origin):
     parts = origin.split(":")
     if parts[0] == "http" and parts[1] != "//localhost":
         return False # don't allow http requests if not local
-    return parts[1][2:] in ACCEPTABLE_REFERERS
+    if parts[1][2:] in ACCEPTABLE_REFERERS:
+        return True
+    return False
 
 def checkOrigin(func):
     def wrapper(self):
