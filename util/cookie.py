@@ -5,7 +5,7 @@ def set(response, name, value, domain=None, path="/", expires=None, secure=True)
     cookie = Cookie.BaseCookie()
     cookie[name] = value
     cookie[name]["path"] = path
-    # cookie[name]["httponly"] = True
+    cookie[name]["httponly"] = True
     if secure:
         cookie[name]["Secure"] = True
     if domain: cookie[name]["domain"] = domain
@@ -13,8 +13,9 @@ def set(response, name, value, domain=None, path="/", expires=None, secure=True)
         cookie[name]["expires"] = email.utils.formatdate(
             expires, localtime=False, usegmt=True)
     cookieOutput = cookie.output()[12:]
-    if secure:
-        cookieOutput = cookieOutput + "; SameSite=None"
+    # going same-origin for now - might come back to this eventually
+    # if secure:
+        # cookieOutput = cookieOutput + "; SameSite=None"
     response.headers.add("Set-Cookie", cookieOutput)
 
 def clear(response, name, path="/"):

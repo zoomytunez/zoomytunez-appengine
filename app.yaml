@@ -4,7 +4,7 @@ threadsafe: true
 
 handlers:
 
-- url: /
+- url: /z
   script: main.application
 
 - url: /auth/.*
@@ -19,9 +19,13 @@ handlers:
 - url: /spotifytest/.*
   script: routes.spotifytest
 
+- url: /
+  static_files: www/build/index.html
+  upload: www/build/index.html
+
 - url: /(.*)$
-  static_files: public/\1
-  upload: public/.*$
+  static_files: www/build/\1
+  upload: www/build/.*$
 
 libraries:
 - name: webapp2

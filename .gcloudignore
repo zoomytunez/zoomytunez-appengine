@@ -1,0 +1,14 @@
+www/node_modules/
+www/public/
+www/src/
+www/.*
+www/*.json
+
+README.md
+.git/
+.idea/
+.DS_Store
+*.pyc
+LICENSE
+.git*
+deploy.sh

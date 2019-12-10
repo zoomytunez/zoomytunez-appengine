@@ -46,6 +46,8 @@ def checkOrigin(func):
             origin = self.request.headers["Origin"]
             if not _originTest(origin):
                 self.response.status = 403
+                self.response.write("Not allowed")
+                return
             self.response.headers.add("Access-Control-Allow-Origin", origin)
             self.response.headers.add("Vary", "Origin")
             self.response.headers.add("Access-Control-Allow-Credentials", "true")
