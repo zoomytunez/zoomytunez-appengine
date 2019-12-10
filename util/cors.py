@@ -1,29 +1,26 @@
 import webapp2
 from model import User
 
-def requiresAuth(spotify=False, strava=False):
+def requiresAuth(spotify=False, strava=False, user=False, strict=True):
     def decorator(func):
         def wrapper(self):
             kwargs = {}
             session = None
-            if spotify or strava:
-                user = User.getForSession(self.request)
-            if spotify:
-                try:
-                    spotifyAPI = user.getSpotifyAPI()
-                    if not spotifyAPI: raise Error()
-                except:
+            dbUser = User.getForSession(self.request)
+            if strict and not dbUser:
+                self.response.status = 401
+                self.response.write("Unauthorized")
+                return
+            if user:
+                kwargs["user"] = dbUser
+            if dbUser and spotify:
+                spotifyAPI = dbUser.getSpotifyAPI()
+                if strict and not spotifyAPI:
                     self.response.status = 401
                     self.response.write("Unauthorized")
                     return
                 kwargs["spotifyAPI"] = spotifyAPI
-            if strava:
-                # stravaAPI = user.getStravaAPI()
-                # if not stravaAPI:
-                    # self.response.status = 401
-                    # self.response.write("Unauthorized")
-                    # return
-                # kwargs["stravaAPI"] = stravaAPI
+            if dbUser and strava:
                 pass # need to implement strava api
             func(self, **kwargs)
         return wrapper
@@ -41,7 +38,7 @@ def _originTest(origin):
     return False
 
 def checkOrigin(func):
-    def wrapper(self):
+    def wrapper(self, *args, **kwargs):
         if "Origin" in self.request.headers:
             origin = self.request.headers["Origin"]
             if not _originTest(origin):
@@ -53,7 +50,7 @@ def checkOrigin(func):
             self.response.headers.add("Access-Control-Allow-Credentials", "true")
             if func.__name__ == "options" and self.CORS_METHODS:
                 self.response.headers.add("Access-Control-Allow-Methods", self.CORS_METHODS)
-        func(self)
+        func(self, *args, **kwargs)
     return wrapper
 
 class CORSRequestHandler(webapp2.RequestHandler):

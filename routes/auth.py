@@ -164,7 +164,8 @@ class LogoutHandler(webapp2.RequestHandler):
         cookie.clear(self.response, "session")
         cookie.clear(self.response, "user")
         self.response.status = 302
-        self.response.headers.add('Location', '/')
+        redirect = self.request.GET.get("from", "/")
+        self.response.headers.add('Location', str(redirect))
 
 
 route = webapp2.WSGIApplication([

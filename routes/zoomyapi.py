@@ -1,4 +1,4 @@
-import webapp2, urllib
+import webapp2, urllib, json
 from model import User
 from util.cors import requiresAuth, checkOrigin, CORSRequestHandler
 
@@ -31,15 +31,42 @@ class SpotifyGenres(CORSRequestHandler):
 
 class UserStatus(CORSRequestHandler):
     @checkOrigin
-    @requiresAuth(spotify=True)
-    def get(self, spotifyAPI):
-        info = spotifyAPI.getUserInformation()
-
+    @requiresAuth(user=True, spotify=True, strict=False)
+    def get(self, user=None, spotifyAPI=None):
         self.response.headers.add("Content-Type", "application/json")
-        self.response.write('{"status":"ok"}')
+        if user:
+            info = spotifyAPI.getUserInformation()
+            data = {}
+            data["user"] = info["display_name"]
+            data["photo"] = info["images"][0]["url"] if info["images"] else None
+            data["height"] = user.height
+            data["playlists"] = user.savedPlaylists
+            self.response.write(json.dumps(data))
+        else:
+            self.response.write('{"user":null}')
+
+class SetUserHeight(CORSRequestHandler):
+
+    ALLOWED_METHODS = "POST"
+
+    @checkOrigin
+    @requiresAuth(user=True)
+    def post(self, user):
+        self.response.headers.add("Content-Type", "application/json")
+        try:
+            height = int(self.request.body)
+            if height < 0 or height > 5000: raise Error()
+            user.height = height
+            user.put()
+            data = {"height": height}
+            self.response.write(json.dumps(data))
+        except:
+            self.response.status = 500
+            self.response.write('{"error": true}')
 
 route = webapp2.WSGIApplication([
     ("/api/search", SpotifySearch),
     ("/api/list-genres", SpotifyGenres),
-    ("/api/user", UserStatus)
+    ("/api/user", UserStatus),
+    ("/api/user/height", SetUserHeight),
 ])

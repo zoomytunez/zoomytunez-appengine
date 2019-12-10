@@ -14,6 +14,7 @@ class User(ndb.Model):
     stravaAccessToken = ndb.StringProperty(indexed=False)
     stravaRefreshToken = ndb.StringProperty(indexed=False)
     savedPlaylists = ndb.StringProperty(indexed=False, repeated=True)
+    height = ndb.IntegerProperty(indexed=False)
 
     def refreshSession(self):
         self.sessionCookie = binascii.hexlify(os.urandom(20)).decode()
