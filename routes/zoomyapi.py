@@ -29,7 +29,17 @@ class SpotifyGenres(CORSRequestHandler):
         self.response.headers.add("Content-Type", "application/json")
         self.response.write(searchResults)
 
+class UserStatus(CORSRequestHandler):
+    @checkOrigin
+    @requiresAuth(spotify=True)
+    def get(self, spotifyAPI):
+        info = spotifyAPI.getUserInformation()
+
+        self.response.headers.add("Content-Type", "application/json")
+        self.response.write('{"status":"ok"}')
+
 route = webapp2.WSGIApplication([
     ("/api/search", SpotifySearch),
-    ("/api/list-genres", SpotifyGenres)
+    ("/api/list-genres", SpotifyGenres),
+    ("/api/user", UserStatus)
 ])
