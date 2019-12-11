@@ -167,11 +167,22 @@ class LogoutHandler(webapp2.RequestHandler):
         redirect = self.request.GET.get("from", "/")
         self.response.headers.add('Location', str(redirect))
 
+class ClearDataHandler(webapp2.RequestHandler):
+    def get(self):
+        userKey = User.getForSession(self.request, getKey=True)
+        if userKey:
+            userKey.delete()
+        cookie.clear(self.response, "session")
+        cookie.clear(self.response, "user")
+        self.response.status = 302
+        redirect = self.request.GET.get("from", "/")
+        self.response.headers.add('Location', str(redirect))
 
 route = webapp2.WSGIApplication([
     (SPOTIFY_REQUEST_PATH + "/?", SpotifyRequestHandler),
     (SPOTIFY_CALLBACK_PATH + "/?", SpotifyCallbackHandler),
     (STRAVA_REQUEST_PATH + "/?", StravaRequestHandler),
     (STRAVA_CALLBACK_PATH + "/?", StravaCallbackHandler),
-    ("/logout", LogoutHandler)
+    ("/logout", LogoutHandler),
+    ("/auth/forget", ClearDataHandler)
 ], debug=True)

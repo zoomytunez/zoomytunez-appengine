@@ -30,7 +30,7 @@ class User(ndb.Model):
         return User.query(User.spotifyID == spotifyID)
 
     @classmethod
-    def getForSession(cls, req):
+    def getForSession(cls, req, getKey=False):
         userCookie = cookie.parse(req.cookies.get("user"))
         sessionCookie = cookie.parse(req.cookies.get("session"))
         if not userCookie or not sessionCookie:
@@ -39,7 +39,10 @@ class User(ndb.Model):
             key = ndb.Key(urlsafe=userCookie)
             user = key.get()
             if user.sessionCookie and user.sessionCookie == sessionCookie:
-                return user
+                if getKey:
+                    return key
+                else:
+                    return user
             return None
         except:
             return None
