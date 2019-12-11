@@ -1,6 +1,6 @@
 import webapp2, urllib, json
 from model import User
-from util.cors import requiresAuth, checkOrigin, CORSRequestHandler
+from util.cors import requiresAuth, checkOrigin, CORSRequestHandle
 
 class SpotifySearch(CORSRequestHandler):
     @checkOrigin
@@ -28,6 +28,17 @@ class SpotifyGenres(CORSRequestHandler):
         searchResults = spotifyAPI.getGenres(parse=False)
         self.response.headers.add("Content-Type", "application/json")
         self.response.write(searchResults)
+
+class SpotifyRecommendations(CORSRequestHandler):
+    @checkOrigin
+    @requiresAuth(spotify=True)
+    #not sure how to get the list of seeds from user
+    def get(self, spotifyAPI):
+        recommendationResults = spotifyAPI.getRecommendations(seedList)["tracks"]
+        trackIDList = []
+        for track in recommendationResults:
+            trackIDList.append(track["id"])
+        return getAudioFeatures(trackIDList)
 
 class UserStatus(CORSRequestHandler):
     @checkOrigin

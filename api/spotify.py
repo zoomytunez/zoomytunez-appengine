@@ -44,6 +44,7 @@ class SpotifyAPI():
             "seed_artists": artists,
             "seed_tracks": tracks,
             "seed_genres": genres,
+            "limit": 100
         }
         error = refreshAndRetry(self, lambda: self.getRecommendations())
         res = safeGet(URL + "recommendations?" + urllib.urlencode(params), bearer = self.accessToken, error = error)
