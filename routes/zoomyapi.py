@@ -29,6 +29,21 @@ class SpotifyGenres(CORSRequestHandler):
         self.response.headers.add("Content-Type", "application/json")
         self.response.write(searchResults)
 
+class RenamePlaylist(CORSRequestHandler):
+
+    ALLOWED_METHOD = "POST"
+
+    @checkOrigin
+    @requiresAuth(spotify=True)
+    def post(self, spotifyAPI=None):
+        self.response.headers.add("Content-Type", "application/json")
+        data = json.loads(self.request.body)
+        playlistID = data["id"]
+        name = data["name"]
+        spotifyAPI.setPlaylistName(playlistID, name)
+        self.response.write('{"status": "ok"}')
+
+
 class BuildPlaylist(CORSRequestHandler):
 
     ALLOWED_METHODS = "POST"
@@ -52,7 +67,7 @@ class BuildPlaylist(CORSRequestHandler):
         # get recommendations from spotify
         recommendationResults = spotifyAPI.getRecommendations(
             artists, tracks, genres,
-            bpmrange=(round(minbpm - 10), round(maxbpm + 10))
+            bpmrange=(round(minbpm - 15), round(maxbpm + 15))
         )["tracks"]
 
         # create id -> track lookup table for later
@@ -91,6 +106,8 @@ class BuildPlaylist(CORSRequestHandler):
             playlistData[i]["bpm"] = playlistSoFar[i]["tempo"]
 
         responseData = {
+            "id": playlist["id"],
+            "name": playlist["name"],
             "uri": playlist["uri"],
             "tracks": playlistData
         }
@@ -160,4 +177,5 @@ route = webapp2.WSGIApplication([
     ("/api/user", UserStatus),
     ("/api/user/height", SetUserHeight),
     ("/api/playlist/build", BuildPlaylist),
+    ("/api/playlist/rename", RenamePlaylist),
 ])

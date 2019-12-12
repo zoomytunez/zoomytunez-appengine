@@ -4,8 +4,25 @@ import json as jsonModule
 def _noop(*args):
     pass
 
-def safeGet(url, data=None, error=_noop, auth=None, bearer=None, json=False):
-    req = urllib2.Request(url)
+# https://stackoverflow.com/a/31839324
+class MethodRequest(urllib2.Request):
+    def __init__(self, *args, **kwargs):
+        if 'method' in kwargs:
+            self._method = kwargs['method']
+            del kwargs['method']
+        else:
+            self._method = None
+        return urllib2.Request.__init__(self, *args, **kwargs)
+
+    def get_method(self, *args, **kwargs):
+        if self._method is not None:
+            return self._method
+        return urllib2.Request.get_method(self, *args, **kwargs)
+
+def safeGet(url, data=None, error=_noop, auth=None, bearer=None, json=False, method="GET"):
+    if method == "GET" and data:
+        method = "POST"
+    req = MethodRequest(url, method=method)
     if bearer:
         auth = "Bearer " + bearer
     if auth:

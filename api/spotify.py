@@ -65,6 +65,12 @@ class SpotifyAPI():
         else:
             return res.read()
 
+    def setPlaylistName(self, playlistID, name):
+        error = refreshAndRetry(self, lambda: self.setPlaylistName(playlistID, name, parse=parse))
+        res = safeGet(URL + "playlists/" + playlistID, method="PUT", bearer=self.accessToken, error=error, data={"name":name}, json=True)
+        if not res: return None
+        return True
+
     #trackIDS should be a list of ids
     def getAudioFeatures(self, trackIDs, parse=True):
         error = refreshAndRetry(self, lambda: self.getAudioFeatures())
@@ -74,6 +80,7 @@ class SpotifyAPI():
             return json.load(res)
         else:
             return res.read()
+
 
     def getAudioAnalysis(self, trackID, parse=True):
         error = refreshAndRetry(self, lambda: self.getAudioAnalysis())
