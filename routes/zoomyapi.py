@@ -5,7 +5,7 @@ from util.cors import requiresAuth, checkOrigin, CORSRequestHandler
 class SpotifySearch(CORSRequestHandler):
     @checkOrigin
     @requiresAuth(spotify=True)
-    def get(self, spotifyAPI):
+    def get(self, spotifyAPI=None):
         params = self.request.GET
         if "q" not in params:
             self.response.status = 400
@@ -24,7 +24,7 @@ class SpotifySearch(CORSRequestHandler):
 class SpotifyGenres(CORSRequestHandler):
     @checkOrigin
     @requiresAuth(spotify=True)
-    def get(self, spotifyAPI):
+    def get(self, spotifyAPI=None):
         searchResults = spotifyAPI.getGenres(parse=False)
         self.response.headers.add("Content-Type", "application/json")
         self.response.write(searchResults)
@@ -35,7 +35,7 @@ class BuildPlaylist(CORSRequestHandler):
 
     @checkOrigin
     @requiresAuth(user=True, spotify=True)
-    def post(self, spotifyAPI):
+    def post(self, spotifyAPI=None):
         self.response.headers.add("Content-Type", "application/json")
         try:
             data = json.loads(self.request.body)
@@ -67,7 +67,7 @@ def songFitScore(curve, currentDuration):
 class UserStatus(CORSRequestHandler):
     @checkOrigin
     @requiresAuth(user=True, spotify=True, strict=False)
-    def get(self, user, spotifyAPI):
+    def get(self, user=None, spotifyAPI=None):
         self.response.headers.add("Content-Type", "application/json")
         if user:
             info = spotifyAPI.getUserInformation()
