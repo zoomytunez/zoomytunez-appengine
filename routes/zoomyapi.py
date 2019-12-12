@@ -1,6 +1,6 @@
 import webapp2, urllib, json
 from model import User
-from util.cors import requiresAuth, checkOrigin, CORSRequestHandle
+from util.cors import requiresAuth, checkOrigin, CORSRequestHandler
 
 class SpotifySearch(CORSRequestHandler):
     @checkOrigin
