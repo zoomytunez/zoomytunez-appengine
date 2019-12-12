@@ -29,21 +29,45 @@ class SpotifyGenres(CORSRequestHandler):
         self.response.headers.add("Content-Type", "application/json")
         self.response.write(searchResults)
 
-class SpotifyRecommendations(CORSRequestHandler):
+class BuildPlaylist(CORSRequestHandler):
+
+    ALLOWED_METHODS = "POST"
+
     @checkOrigin
-    @requiresAuth(spotify=True)
-    #not sure how to get the list of seeds from user
-    def get(self, spotifyAPI):
-        recommendationResults = spotifyAPI.getRecommendations(seedList)["tracks"]
-        trackIDList = []
-        for track in recommendationResults:
-            trackIDList.append(track["id"])
-        return getAudioFeatures(trackIDList)
+    @requiresAuth(user=True, spotify=True)
+    def post(self, spotifyAPI):
+        self.response.headers.add("Content-Type", "application/json")
+        try:
+            data = json.loads(self.request.body)
+            artists = data["seeds"]["artists"]
+            tracks = data["seeds"]["tracks"]
+            genres = data["seeds"]["genres"]
+            recommendationResults = spotifyAPI.getRecommendations(artists, tracks, genres)["tracks"]
+            trackIDList = [track['id'] for track in recommendationResults]
+            songOptions = spotifyAPI.getAudioFeatures(trackIDList)["audio_features"]
+            curve = data["curve"]
+            currentDuration = 0
+            playlistSoFar = []
+            while currentDuration < curve["duration"]:
+                getScore = songFitScore(curve, currentDuration)
+                sortedSongs = sorted(songOptions, key= getScore)
+                bestFitSong = sortedSongs[random.randint(0,4)]
+                songOptions = [song for song in songOptions if song != bestFitSong]
+                playlistSoFar.append(bestFitSong)
+                currentDuration += bestFitSong["duration_ms"]/1000
+        except:
+            self.response.status = 500
+            self.response.write('{"error": true}')
+
+def songFitScore(curve, currentDuration):
+    def getScore(song):
+        pass
+    return getScore
 
 class UserStatus(CORSRequestHandler):
     @checkOrigin
     @requiresAuth(user=True, spotify=True, strict=False)
-    def get(self, user=None, spotifyAPI=None):
+    def get(self, user, spotifyAPI):
         self.response.headers.add("Content-Type", "application/json")
         if user:
             info = spotifyAPI.getUserInformation()
@@ -62,7 +86,7 @@ class SetUserHeight(CORSRequestHandler):
 
     @checkOrigin
     @requiresAuth(user=True)
-    def post(self, user):
+    def post(self, user=None):
         self.response.headers.add("Content-Type", "application/json")
         try:
             height = int(self.request.body)
