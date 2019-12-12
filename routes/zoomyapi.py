@@ -52,72 +52,76 @@ class BuildPlaylist(CORSRequestHandler):
     @requiresAuth(user=True, spotify=True)
     def post(self, user=None, spotifyAPI=None):
         self.response.headers.add("Content-Type", "application/json")
-        # try:
-        data = json.loads(self.request.body)
-        artists = ",".join(data["seeds"]["artists"])
-        tracks = ",".join(data["seeds"]["tracks"])
-        genres = ",".join(data["seeds"]["genres"])
-        minbpm = 500
-        maxbpm = 0
-        curve = data["curve"]
-        for point in curve["points"]:
-            minbpm = min(minbpm, point["bpm"])
-            maxbpm = max(maxbpm, point["bpm"])
+        try:
+            data = json.loads(self.request.body)
+            playlistID = data.get("playlistID", None)
+            artists = ",".join(data["seeds"]["artists"])
+            tracks = ",".join(data["seeds"]["tracks"])
+            genres = ",".join(data["seeds"]["genres"])
+            minbpm = 500
+            maxbpm = 0
+            curve = data["curve"]
+            for point in curve["points"]:
+                minbpm = min(minbpm, point["bpm"])
+                maxbpm = max(maxbpm, point["bpm"])
 
-        # get recommendations from spotify
-        recommendationResults = spotifyAPI.getRecommendations(
-            artists, tracks, genres,
-            bpmrange=(round(minbpm - 15), round(maxbpm + 15))
-        )["tracks"]
+            # get recommendations from spotify
+            recommendationResults = spotifyAPI.getRecommendations(
+                artists, tracks, genres,
+                bpmrange=(round(minbpm - 15), round(maxbpm + 15))
+            )["tracks"]
 
-        # create id -> track lookup table for later
-        trackLookup = {}
-        for track in recommendationResults:
-            trackLookup[track['id']] = track
+            # create id -> track lookup table for later
+            trackLookup = {}
+            for track in recommendationResults:
+                trackLookup[track['id']] = track
 
-        # get audio features for all tracks from spotify
-        trackIDList = [track['id'] for track in recommendationResults]
-        songOptions = spotifyAPI.getAudioFeatures(trackIDList)["audio_features"]
+            # get audio features for all tracks from spotify
+            trackIDList = [track['id'] for track in recommendationResults]
+            songOptions = spotifyAPI.getAudioFeatures(trackIDList)["audio_features"]
 
-        if len(songOptions) < 50:
-            self.response.write('{"error": "SMALL_RECOMMENDATION_POOL"}')
-            return
+            if len(songOptions) < 50:
+                self.response.write('{"error": "SMALL_RECOMMENDATION_POOL"}')
+                return
 
-        # build the playlist!
-        currentDuration = 0
-        playlistSoFar = []
-        while currentDuration < curve["duration"]:
-            getScore = songFitScore(curve, currentDuration)
-            sortedSongs = sorted(songOptions, key=getScore)
-            bestFitSong = sortedSongs[random.randint(0,4)]
-            songOptions = [song for song in songOptions if song != bestFitSong]
-            playlistSoFar.append(bestFitSong)
-            currentDuration += bestFitSong["duration_ms"]/1000
+            # build the playlist!
+            currentDuration = 0
+            playlistSoFar = []
+            while currentDuration < curve["duration"]:
+                getScore = songFitScore(curve, currentDuration)
+                sortedSongs = sorted(songOptions, key=getScore)
+                bestFitSong = sortedSongs[random.randint(0,4)]
+                songOptions = [song for song in songOptions if song != bestFitSong]
+                playlistSoFar.append(bestFitSong)
+                currentDuration += bestFitSong["duration_ms"]/1000
 
-        # make it a playlist!
-        username = user.spotifyID
-        playlist = spotifyAPI.createPlaylist(username, "ZoomyTunez Run")
-        playlistID = playlist["id"]
+            # make it a playlist!
+            playlist = None
+            if not playlistID:
+                username = user.spotifyID
+                playlist = spotifyAPI.createPlaylist(username, "ZoomyTunez Run")
+                playlistID = playlist["id"]
 
-        spotifyAPI.addTracks([track["uri"] for track in playlistSoFar], playlistID)
+            spotifyAPI.setTracks([track["uri"] for track in playlistSoFar], playlistID)
 
-        playlistData = [trackLookup[track["id"]] for track in playlistSoFar]
-        for i in range(len(playlistData)):
-            playlistData[i]["bpm"] = playlistSoFar[i]["tempo"]
+            playlistData = [trackLookup[track["id"]] for track in playlistSoFar]
+            for i in range(len(playlistData)):
+                playlistData[i]["bpm"] = playlistSoFar[i]["tempo"]
 
-        responseData = {
-            "id": playlist["id"],
-            "name": playlist["name"],
-            "uri": playlist["uri"],
-            "tracks": playlistData
-        }
+            responseData = {
+                "tracks": playlistData
+            }
+            if playlist:
+                responseData["id"] = playlist["id"]
+                responseData["name"] = playlist["name"]
+                responseData["uri"] = playlist["uri"]
 
-        self.response.write(json.dumps(responseData))
+            self.response.write(json.dumps(responseData))
 
-        # except Exception as e:
-        #     print(e)
-        #     self.response.status = 500
-        #     self.response.write('{"error": true}')
+        except Exception as e:
+            logging.error(e)
+            self.response.status = 500
+            self.response.write('{"error": true}')
 
 def songFitScore(curve, currentDuration):
     def getScore(song):

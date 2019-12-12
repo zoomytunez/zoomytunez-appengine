@@ -126,10 +126,11 @@ class SpotifyAPI():
         else:
             return res.read()
 
-    def addTracks(self, uris, playlistID, parse=True):
+    # overwrites any tracks in playlist already!
+    def setTracks(self, uris, playlistID, parse=True):
         error = refreshAndRetry(self, lambda: self.addTracks())
         res = safeGet(URL + "playlists/" + playlistID + "/tracks",
-                      data=uris, json=True,
+                      data={"uris": uris}, json=True, method="PUT",
                       bearer=self.accessToken, error=error)
         if not res: return None
         if parse:
