@@ -46,6 +46,7 @@ def checkOrigin(func):
                 self.response.write("Not allowed")
                 return
             self.response.headers.add("Access-Control-Allow-Origin", origin)
+            self.response.headers.add("Access-Control-Allow-Headers", "Content-Type")
             self.response.headers.add("Vary", "Origin")
             self.response.headers.add("Access-Control-Allow-Credentials", "true")
             if func.__name__ == "options" and self.CORS_METHODS:

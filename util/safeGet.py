@@ -20,6 +20,8 @@ def safeGet(url, data=None, error=_noop, auth=None, bearer=None, json=False):
         else:
             return urllib2.urlopen(req)
     except urllib2.HTTPError as e:
+        logging.error("!!Error fetching " + url)
+        logging.error("Data: " + jsonModule.dumps(data))
         logging.error("The server couldn't fulfill the request.")
         logging.error("Error code: " + str(e.code))
         if error: return error(e)

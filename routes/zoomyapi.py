@@ -1,4 +1,4 @@
-import webapp2, urllib, json
+import webapp2, urllib, json, random, logging
 from model import User
 from util.cors import requiresAuth, checkOrigin, CORSRequestHandler
 
@@ -35,33 +35,88 @@ class BuildPlaylist(CORSRequestHandler):
 
     @checkOrigin
     @requiresAuth(user=True, spotify=True)
-    def post(self, spotifyAPI=None):
+    def post(self, user=None, spotifyAPI=None):
         self.response.headers.add("Content-Type", "application/json")
-        try:
-            data = json.loads(self.request.body)
-            artists = data["seeds"]["artists"]
-            tracks = data["seeds"]["tracks"]
-            genres = data["seeds"]["genres"]
-            recommendationResults = spotifyAPI.getRecommendations(artists, tracks, genres)["tracks"]
-            trackIDList = [track['id'] for track in recommendationResults]
-            songOptions = spotifyAPI.getAudioFeatures(trackIDList)["audio_features"]
-            curve = data["curve"]
-            currentDuration = 0
-            playlistSoFar = []
-            while currentDuration < curve["duration"]:
-                getScore = songFitScore(curve, currentDuration)
-                sortedSongs = sorted(songOptions, key= getScore)
-                bestFitSong = sortedSongs[random.randint(0,4)]
-                songOptions = [song for song in songOptions if song != bestFitSong]
-                playlistSoFar.append(bestFitSong)
-                currentDuration += bestFitSong["duration_ms"]/1000
-        except:
-            self.response.status = 500
-            self.response.write('{"error": true}')
+        # try:
+        data = json.loads(self.request.body)
+        artists = ",".join(data["seeds"]["artists"])
+        tracks = ",".join(data["seeds"]["tracks"])
+        genres = ",".join(data["seeds"]["genres"])
+        minbpm = 500
+        maxbpm = 0
+        curve = data["curve"]
+        for point in curve["points"]:
+            minbpm = min(minbpm, point["bpm"])
+            maxbpm = max(maxbpm, point["bpm"])
+
+        # get recommendations from spotify
+        recommendationResults = spotifyAPI.getRecommendations(
+            artists, tracks, genres,
+            bpmrange=(round(minbpm - 10), round(maxbpm + 10))
+        )["tracks"]
+
+        # create id -> track lookup table for later
+        trackLookup = {}
+        for track in recommendationResults:
+            trackLookup[track['id']] = track
+
+        # get audio features for all tracks from spotify
+        trackIDList = [track['id'] for track in recommendationResults]
+        songOptions = spotifyAPI.getAudioFeatures(trackIDList)["audio_features"]
+
+        if len(songOptions) < 50:
+            self.response.write('{"error": "SMALL_RECOMMENDATION_POOL"}')
+            return
+
+        # build the playlist!
+        currentDuration = 0
+        playlistSoFar = []
+        while currentDuration < curve["duration"]:
+            getScore = songFitScore(curve, currentDuration)
+            sortedSongs = sorted(songOptions, key=getScore)
+            bestFitSong = sortedSongs[random.randint(0,4)]
+            songOptions = [song for song in songOptions if song != bestFitSong]
+            playlistSoFar.append(bestFitSong)
+            currentDuration += bestFitSong["duration_ms"]/1000
+
+        # make it a playlist!
+        username = user.spotifyID
+        playlist = spotifyAPI.createPlaylist(username, "ZoomyTunez Run")
+        playlistID = playlist["id"]
+
+        spotifyAPI.addTracks([track["uri"] for track in playlistSoFar], playlistID)
+
+        playlistData = [trackLookup[track["id"]] for track in playlistSoFar]
+        for i in range(len(playlistData)):
+            playlistData[i]["bpm"] = playlistSoFar[i]["tempo"]
+
+        responseData = {
+            "uri": playlist["uri"],
+            "tracks": playlistData
+        }
+
+        self.response.write(json.dumps(responseData))
+
+        # except Exception as e:
+        #     print(e)
+        #     self.response.status = 500
+        #     self.response.write('{"error": true}')
 
 def songFitScore(curve, currentDuration):
     def getScore(song):
-        pass
+        songStart = currentDuration
+        songEnd = currentDuration + song["duration_ms"]/1000
+
+        relevantSegments = [(
+            (segment, min(segment["end"], songEnd) - max(segment["start"], songStart))
+        ) for segment in curve["points"] if not (
+            segment["end"] <= songStart or songEnd <= segment["start"]
+        )]
+
+        score = 0
+        for (segment, overlap) in relevantSegments:
+            score += abs(segment["bpm"] - song["tempo"]) * overlap
+        return score
     return getScore
 
 class UserStatus(CORSRequestHandler):
@@ -104,4 +159,5 @@ route = webapp2.WSGIApplication([
     ("/api/list-genres", SpotifyGenres),
     ("/api/user", UserStatus),
     ("/api/user/height", SetUserHeight),
+    ("/api/playlist/build", BuildPlaylist),
 ])

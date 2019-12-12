@@ -38,14 +38,16 @@ class SpotifyAPI():
         else:
             return res.read()
 
-    #jordan pls check over this
-    def getRecommendations(self, artists, tracks, genres, parse=True):
+    def getRecommendations(self, artists, tracks, genres, bpmrange=None, parse=True):
         params = {
             "seed_artists": artists,
             "seed_tracks": tracks,
             "seed_genres": genres,
             "limit": 100
         }
+        if bpmrange:
+            params["min_tempo"] = bpmrange[0]
+            params["max_tempo"] = bpmrange[1]
         error = refreshAndRetry(self, lambda: self.getRecommendations())
         res = safeGet(URL + "recommendations?" + urllib.urlencode(params), bearer = self.accessToken, error = error)
         if not res: return None
@@ -66,7 +68,7 @@ class SpotifyAPI():
     #trackIDS should be a list of ids
     def getAudioFeatures(self, trackIDs, parse=True):
         error = refreshAndRetry(self, lambda: self.getAudioFeatures())
-        res = safeGet(URL + "audio-features/?" + urllib.urlencode(trackIDs), bearer = self.accessToken, error = error)
+        res = safeGet(URL + "audio-features/?ids=" + ",".join(trackIDs), bearer = self.accessToken, error = error)
         if not res: return None
         if parse:
             return json.load(res)
